@@ -340,10 +340,8 @@
 </div>
 
 <script>
-/* ============================================
-   EDIT THESE TO PERSONALIZE
-   ============================================ */
-const ASKER_NAME   = "someone who keeps rehearsing this"; // shown under the headline
+
+const ASKER_NAME   = "Someone who keeps thinking of you"; // shown under the headline
 const YES_MESSAGE  = "Pick a night this week — I'm already looking forward to it."; // shown after they click Yes
 /* ============================================ */
 
@@ -388,19 +386,19 @@ const noBtn = document.getElementById('noBtn');
 const yesBtn = document.getElementById('yesBtn');
 const hintText = document.getElementById('hintText');
 const stageEl = document.getElementById('stage');
-
 const hints = [
-  "no? really?",
-  "that button's shrinking, not the feeling.",
-  "keep pressing, see what happens.",
-  "I'm getting smaller, not going anywhere.",
-  "the other button is still bigger.",
-  "almost gone now.",
-  "persistence noted.",
-  "there's barely anything left of me.",
-  "one more press...",
-  "okay, I'm out. it's a yes now."
+  "no? my heart just skipped a little.",
+  "shrinking, but my hope for you isn't.",
+  "keep pressing — I'll wait for you.",
+  "getting smaller, thinking of you gets bigger.",
+  "the yes button suits you better anyway.",
+  "almost gone, but i am not.",
+  "you're stubborn — that's one more thing I like.",
+  "barely anything left of me, all of it is yours.",
+  "one more press and I'm all in.",
+  "okay, I surrender. it was always a yes."
 ];
+ 
 
 let clickCount = 0;
 const MAX_CLICKS = hints.length;
