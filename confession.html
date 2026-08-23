@@ -305,6 +305,15 @@
 
 <div class="heart-rain" id="heartRain"></div>
 
+<!--
+  OPTIONAL: to play your own song on reveal, put an mp3 file named
+  "song.mp3" in the SAME FOLDER as this HTML file. If it's missing,
+  a short built-in chime plays instead — nothing will be silent.
+-->
+<audio id="bgSong" preload="auto" loop>
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
+
 <main class="stage" id="stage">
   <div class="eyebrow">A question, under the stars</div>
   <h1 class="headline">Will you go out with me?</h1>
@@ -340,10 +349,8 @@
 </div>
 
 <script>
-/* ============================================
-   EDIT THESE TO PERSONALIZE
-   ============================================ */
-const ASKER_NAME   = "someone who keeps rehearsing this"; // shown under the headline
+
+const ASKER_NAME   = "Someone who keeps thinking of you"; // shown under the headline
 const YES_MESSAGE  = "Pick a night this week — I'm already looking forward to it."; // shown after they click Yes
 /* ============================================ */
 
@@ -388,19 +395,19 @@ const noBtn = document.getElementById('noBtn');
 const yesBtn = document.getElementById('yesBtn');
 const hintText = document.getElementById('hintText');
 const stageEl = document.getElementById('stage');
-
 const hints = [
-  "no? really?",
-  "that button's shrinking, not the feeling.",
-  "keep pressing, see what happens.",
-  "I'm getting smaller, not going anywhere.",
-  "the other button is still bigger.",
-  "almost gone now.",
-  "persistence noted.",
-  "there's barely anything left of me.",
-  "one more press...",
-  "okay, I'm out. it's a yes now."
+  "no? my heart just skipped a little.",
+  "shrinking, but my hope for you isn't.",
+  "keep pressing — I'll wait for you.",
+  "getting smaller, thinking of you gets bigger.",
+  "the yes button suits you better anyway.",
+  "almost gone, but i am not.",
+  "you're stubborn — that's one more thing I like.",
+  "barely anything left of me, all of it is yours.",
+  "one more press and I'm all in.",
+  "okay, I surrender. it was always a yes."
 ];
+ 
 
 let clickCount = 0;
 const MAX_CLICKS = hints.length;
@@ -435,10 +442,54 @@ noBtn.addEventListener('touchstart', (e) => {
   shrinkNoBtn();
 }, { passive: false });
 
-/* ---------- yes click: meteor shower + reveal ---------- */
+/* ---------- background song (or fallback chime) ---------- */
+const bgSong = document.getElementById('bgSong');
+
+function fadeInAudio(audio, target){
+  audio.volume = 0;
+  const steps = 20;
+  let i = 0;
+  const iv = setInterval(() => {
+    i++;
+    audio.volume = Math.min(target, (i / steps) * target);
+    if(i >= steps) clearInterval(iv);
+  }, 40);
+}
+
+function playFallbackChime(){
+  try{
+    const ctx2 = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // a soft C major arpeggio
+    notes.forEach((freq, i) => {
+      const osc = ctx2.createOscillator();
+      const gain = ctx2.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = ctx2.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 1.1);
+      osc.connect(gain).connect(ctx2.destination);
+      osc.start(start);
+      osc.stop(start + 1.2);
+    });
+  }catch(e){ /* audio not available, fail silently */ }
+}
+
+/* ---------- yes click: song + meteor shower + reveal ---------- */
 yesBtn.addEventListener('click', () => {
   stageEl.classList.add('stage-hidden');
   fireMeteors();
+
+  // start playback right inside the click so browsers don't block it
+  bgSong.currentTime = 0;
+  const playPromise = bgSong.play();
+  if(playPromise && playPromise.then){
+    playPromise.then(() => fadeInAudio(bgSong, 0.55)).catch(() => playFallbackChime());
+  } else {
+    playFallbackChime();
+  }
+
   setTimeout(() => {
     document.getElementById('reveal').classList.add('show');
     startHeartRain();
