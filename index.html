@@ -305,6 +305,15 @@
 
 <div class="heart-rain" id="heartRain"></div>
 
+<!--
+  OPTIONAL: to play your own song on reveal, put an mp3 file named
+  "song.mp3" in the SAME FOLDER as this HTML file. If it's missing,
+  a short built-in chime plays instead — nothing will be silent.
+-->
+<audio id="bgSong" preload="auto" loop>
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
+
 <main class="stage" id="stage">
   <div class="eyebrow">A question, under the stars</div>
   <h1 class="headline">Will you go out with me?</h1>
@@ -433,10 +442,54 @@ noBtn.addEventListener('touchstart', (e) => {
   shrinkNoBtn();
 }, { passive: false });
 
-/* ---------- yes click: meteor shower + reveal ---------- */
+/* ---------- background song (or fallback chime) ---------- */
+const bgSong = document.getElementById('bgSong');
+
+function fadeInAudio(audio, target){
+  audio.volume = 0;
+  const steps = 20;
+  let i = 0;
+  const iv = setInterval(() => {
+    i++;
+    audio.volume = Math.min(target, (i / steps) * target);
+    if(i >= steps) clearInterval(iv);
+  }, 40);
+}
+
+function playFallbackChime(){
+  try{
+    const ctx2 = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // a soft C major arpeggio
+    notes.forEach((freq, i) => {
+      const osc = ctx2.createOscillator();
+      const gain = ctx2.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = ctx2.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 1.1);
+      osc.connect(gain).connect(ctx2.destination);
+      osc.start(start);
+      osc.stop(start + 1.2);
+    });
+  }catch(e){ /* audio not available, fail silently */ }
+}
+
+/* ---------- yes click: song + meteor shower + reveal ---------- */
 yesBtn.addEventListener('click', () => {
   stageEl.classList.add('stage-hidden');
   fireMeteors();
+
+  // start playback right inside the click so browsers don't block it
+  bgSong.currentTime = 0;
+  const playPromise = bgSong.play();
+  if(playPromise && playPromise.then){
+    playPromise.then(() => fadeInAudio(bgSong, 0.55)).catch(() => playFallbackChime());
+  } else {
+    playFallbackChime();
+  }
+
   setTimeout(() => {
     document.getElementById('reveal').classList.add('show');
     startHeartRain();
